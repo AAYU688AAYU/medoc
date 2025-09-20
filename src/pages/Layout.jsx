@@ -3,7 +3,7 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
-    Eye, 
+    Brain, 
     Home, 
     Info, 
     Upload, 
@@ -12,7 +12,9 @@ import {
     MessageCircle, 
     LayoutDashboard,
     LogOut,
-    User
+    User as UserIcon,
+    Settings,
+    Bell
 } from "lucide-react";
 import {
     Sidebar,
@@ -31,29 +33,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { User as UserEntity } from "@/api/entities";
 
+import FloatingAIAssistant from "../components/ui/FloatingAIAssistant";
+
 const navigationItems = [
     {
-        title: "Home",
+        title: "Dashboard",
         url: createPageUrl("Home"),
         icon: Home,
     },
     {
-        title: "Diagnosis",
+        title: "New Analysis",
         url: createPageUrl("Diagnosis"),
         icon: Upload,
     },
     {
-        title: "Reports",
+        title: "Patient Reports",
         url: createPageUrl("Reports"),
         icon: FileText,
     },
     {
-        title: "Doctors",
+        title: "Find Specialists",
         url: createPageUrl("Doctors"),
         icon: Stethoscope,
     },
     {
-        title: "AI Chat",
+        title: "AI Assistant",
         url: createPageUrl("Chat"),
         icon: MessageCircle,
     },
@@ -74,7 +78,6 @@ export default function Layout({ children, currentPageName }) {
                 const currentUser = await UserEntity.me();
                 setUser(currentUser);
             } catch (error) {
-                // User not authenticated
                 setUser(null);
             }
         };
@@ -88,38 +91,78 @@ export default function Layout({ children, currentPageName }) {
 
     return (
         <SidebarProvider>
-            <div className="min-h-screen flex w-full bg-gradient-to-br from-slate-50 to-blue-50">
-                <Sidebar className="border-r border-slate-200/60 bg-white/80 backdrop-blur-sm">
-                    <SidebarHeader className="border-b border-slate-200/60 p-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                                <Eye className="w-6 h-6 text-white" />
+            <style>{`
+                :root {
+                    --background: 255 255 255;
+                    --foreground: 51 65 85;
+                    --card: 255 255 255;
+                    --card-foreground: 51 65 85;
+                    --popover: 255 255 255;
+                    --popover-foreground: 51 65 85;
+                    --primary: 14 165 233;
+                    --primary-foreground: 255 255 255;
+                    --secondary: 6 182 212;
+                    --secondary-foreground: 255 255 255;
+                    --muted: 248 250 252;
+                    --muted-foreground: 100 116 139;
+                    --accent: 239 246 255;
+                    --accent-foreground: 30 64 175;
+                    --destructive: 239 68 68;
+                    --destructive-foreground: 255 255 255;
+                    --border: 226 232 240;
+                    --input: 226 232 240;
+                    --ring: 14 165 233;
+                    --radius: 12px;
+                }
+                
+                body {
+                    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background-color: rgb(248 250 252);
+                    line-height: 1.6;
+                }
+                
+                .medical-gradient {
+                    background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
+                }
+                
+                .trust-shadow {
+                    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                }
+            `}</style>
+            <div className="min-h-screen flex w-full bg-gray-50">
+                <Sidebar className="border-r border-gray-200/80 bg-white shadow-sm">
+                    <SidebarHeader className="border-b border-gray-100 p-6 bg-white">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 medical-gradient rounded-2xl flex items-center justify-center shadow-lg">
+                                <Brain className="w-7 h-7 text-white" />
                             </div>
                             <div>
-                                <h2 className="font-bold text-slate-900 text-lg">RetinAI</h2>
-                                <p className="text-xs text-slate-500 font-medium">Advanced Eye Diagnostics</p>
+                                <h2 className="font-bold text-gray-900 text-xl tracking-tight">MINDHUE</h2>
+                                <p className="text-sm text-gray-500 font-medium">Medical AI Platform</p>
                             </div>
                         </div>
                     </SidebarHeader>
                     
-                    <SidebarContent className="p-3">
+                    <SidebarContent className="p-4 bg-white">
                         <SidebarGroup>
-                            <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2">
+                            <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-3">
                                 Navigation
                             </SidebarGroupLabel>
                             <SidebarGroupContent>
-                                <SidebarMenu>
+                                <SidebarMenu className="space-y-1">
                                     {navigationItems.map((item) => (
                                         <SidebarMenuItem key={item.title}>
                                             <SidebarMenuButton 
                                                 asChild 
-                                                className={`hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-lg mb-1 ${
-                                                    location.pathname === item.url ? 'bg-blue-50 text-blue-700 shadow-sm' : ''
+                                                className={`font-medium justify-start hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-xl py-3 px-4 ${
+                                                    location.pathname === item.url 
+                                                        ? 'bg-blue-100 text-blue-700 shadow-sm border border-blue-200 font-semibold' 
+                                                        : 'text-gray-600 hover:shadow-sm'
                                                 }`}
                                             >
-                                                <Link to={item.url} className="flex items-center gap-3 px-3 py-2.5">
+                                                <Link to={item.url} className="flex items-center gap-3">
                                                     <item.icon className="w-5 h-5" />
-                                                    <span className="font-medium">{item.title}</span>
+                                                    <span>{item.title}</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
@@ -130,16 +173,16 @@ export default function Layout({ children, currentPageName }) {
 
                         {user?.role === 'admin' && (
                             <SidebarGroup>
-                                <SidebarGroupLabel className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 py-2">
-                                    Admin
+                                <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-3">
+                                    Administration
                                 </SidebarGroupLabel>
                                 <SidebarGroupContent>
                                     <SidebarMenu>
                                         <SidebarMenuItem>
-                                            <SidebarMenuButton asChild className="hover:bg-red-50 hover:text-red-700 transition-all duration-200 rounded-lg">
-                                                <Link to={createPageUrl("AdminDashboard")} className="flex items-center gap-3 px-3 py-2.5">
+                                            <SidebarMenuButton asChild className="font-medium justify-start text-gray-600 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-xl py-3 px-4">
+                                                <Link to={createPageUrl("AdminDashboard")} className="flex items-center gap-3">
                                                     <LayoutDashboard className="w-5 h-5" />
-                                                    <span className="font-medium">Dashboard</span>
+                                                    <span>Admin Panel</span>
                                                 </Link>
                                             </SidebarMenuButton>
                                         </SidebarMenuItem>
@@ -149,23 +192,23 @@ export default function Layout({ children, currentPageName }) {
                         )}
                     </SidebarContent>
 
-                    <SidebarFooter className="border-t border-slate-200/60 p-4">
+                    <SidebarFooter className="border-t border-gray-100 p-4 bg-white">
                         {user ? (
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full flex items-center justify-center">
-                                        <User className="w-4 h-4 text-white" />
+                                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <UserIcon className="w-5 h-5 text-green-600" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-slate-900 text-sm truncate">{user.full_name}</p>
-                                        <p className="text-xs text-slate-500 truncate">{user.email}</p>
+                                        <p className="font-semibold text-gray-800 text-sm truncate">{user.full_name}</p>
+                                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
                                     </div>
                                 </div>
                                 <Button 
                                     variant="ghost" 
                                     size="icon" 
                                     onClick={handleLogout}
-                                    className="text-slate-400 hover:text-red-500 transition-colors"
+                                    className="text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" />
                                 </Button>
@@ -173,26 +216,39 @@ export default function Layout({ children, currentPageName }) {
                         ) : (
                             <Button 
                                 onClick={() => UserEntity.login()} 
-                                className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white font-medium"
+                                className="w-full medical-gradient hover:opacity-90 text-white font-semibold shadow-md rounded-xl py-3"
                             >
-                                Sign In
+                                Sign In / Sign Up
                             </Button>
                         )}
                     </SidebarFooter>
                 </Sidebar>
 
-                <main className="flex-1 flex flex-col">
-                    <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 md:hidden">
+                <main className="flex-1 flex flex-col min-h-screen">
+                    <header className="flex items-center justify-between bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
                         <div className="flex items-center gap-4">
-                            <SidebarTrigger className="hover:bg-slate-100 p-2 rounded-lg transition-colors duration-200" />
-                            <h1 className="text-xl font-bold text-slate-900">RetinAI</h1>
+                            <SidebarTrigger className="hover:bg-gray-100 p-2 rounded-lg transition-colors duration-200 md:hidden" />
+                            <div>
+                                <h1 className="text-xl font-bold text-gray-800">{currentPageName}</h1>
+                                <p className="text-sm text-gray-500">Powered by AI for better healthcare</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100 rounded-xl">
+                                <Bell className="w-5 h-5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="text-gray-500 hover:bg-gray-100 rounded-xl">
+                                <Settings className="w-5 h-5" />
+                            </Button>
                         </div>
                     </header>
 
-                    <div className="flex-1 overflow-auto">
+                    <div className="flex-1 overflow-auto p-6">
                         {children}
                     </div>
                 </main>
+                
+                <FloatingAIAssistant />
             </div>
         </SidebarProvider>
     );

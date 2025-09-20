@@ -6,6 +6,12 @@ import Diagnosis from "./Diagnosis";
 
 import About from "./About";
 
+import Reports from "./Reports";
+
+import Doctors from "./Doctors";
+
+import Chat from "./Chat";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -15,6 +21,12 @@ const PAGES = {
     Diagnosis: Diagnosis,
     
     About: About,
+    
+    Reports: Reports,
+    
+    Doctors: Doctors,
+    
+    Chat: Chat,
     
 }
 
@@ -48,6 +60,12 @@ function PagesContent() {
                 <Route path="/Diagnosis" element={<Diagnosis />} />
                 
                 <Route path="/About" element={<About />} />
+                
+                <Route path="/Reports" element={<Reports />} />
+                
+                <Route path="/Doctors" element={<Doctors />} />
+                
+                <Route path="/Chat" element={<Chat />} />
                 
             </Routes>
         </Layout>

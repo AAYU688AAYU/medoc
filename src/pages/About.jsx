@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export default function About() {
                             <div className="w-80 h-80 bg-gradient-to-r from-blue-600 to-teal-600 rounded-full flex items-center justify-center mx-auto">
                                 <Eye className="w-32 h-32 text-white" />
                             </div>
-                            <div className="absolute -top-4 -right-4 w-24 h-24 bg-yellow-400 rounded-full flex items-center justify-center">
+                            <div className="absolute -top-4 -right-4 w-24 h-24 bg-blue-400 rounded-full flex items-center justify-center shadow-lg">
                                 <Brain className="w-12 h-12 text-white" />
                             </div>
                         </div>
@@ -168,7 +169,7 @@ export default function About() {
                         </div>
 
                         <div className="text-center">
-                            <div className="w-16 h-16 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <Award className="w-8 h-8 text-white" />
                             </div>
                             <div className="text-3xl font-bold text-slate-900 mb-2">95%+</div>

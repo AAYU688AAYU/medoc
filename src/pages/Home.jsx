@@ -1,195 +1,291 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
-    Eye, 
     Brain, 
-    Shield, 
-    Zap, 
-    ArrowRight, 
     Upload,
     FileText,
+    Activity,
+    Users,
+    ArrowRight,
+    User as UserIcon,
+    TrendingUp,
+    Shield,
+    Zap,
+    Eye,
     Stethoscope,
     CheckCircle,
-    Star
+    Calendar
 } from "lucide-react";
+import { User } from "@/api/entities";
+import { DiagnosisReport } from "@/api/entities";
+
+const StatCard = ({ title, value, icon: Icon, color, trend }) => (
+    <Card className="trust-shadow border border-gray-200/60 hover:shadow-lg transition-all duration-300 bg-white">
+        <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+                    <div className="flex items-center gap-2">
+                        <p className="text-3xl font-bold text-gray-800">{value}</p>
+                        {trend && (
+                            <span className="text-xs text-green-600 font-semibold flex items-center gap-1 bg-green-50 px-2 py-1 rounded-full">
+                                <TrendingUp className="w-3 h-3" />
+                                {trend}%
+                            </span>
+                        )}
+                    </div>
+                </div>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${color} shadow-lg`}>
+                    <Icon className="w-7 h-7 text-white" />
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+);
+
+const ServiceCard = ({ title, description, icon: Icon, color, link, badge }) => (
+    <Card className="hover:shadow-xl transition-all duration-300 border border-gray-200/60 group bg-white trust-shadow">
+        <CardHeader className="pb-4">
+            <div className="flex items-start justify-between mb-4">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${color} group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                    <Icon className="w-7 h-7 text-white" />
+                </div>
+                {badge && (
+                    <span className="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-semibold border border-blue-200">
+                        {badge}
+                    </span>
+                )}
+            </div>
+            <CardTitle className="text-xl font-bold text-gray-800 mb-3">{title}</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+            <p className="text-gray-600 mb-6 leading-relaxed">{description}</p>
+            <Link to={link}>
+                <Button className="w-full medical-gradient hover:opacity-90 text-white font-semibold rounded-xl py-3 shadow-md">
+                    Get Started <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+            </Link>
+        </CardContent>
+    </Card>
+);
 
 export default function Home() {
+    const [user, setUser] = useState(null);
+    const [stats, setStats] = useState({ reports: 0, patients: 0, critical: 0 });
+    const [recentReports, setRecentReports] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function loadData() {
+            try {
+                const currentUser = await User.me();
+                setUser(currentUser);
+            } catch (e) { 
+                setUser(null);
+            }
+
+            try {
+                const reports = await DiagnosisReport.list('-created_date', 5);
+                const allReports = await DiagnosisReport.list();
+                const patientIds = new Set(allReports.map(r => r.patient_id));
+                
+                setRecentReports(reports);
+                setStats({
+                    reports: allReports.length,
+                    patients: patientIds.size,
+                    critical: allReports.filter(r => r.severity === 'critical').length
+                });
+            } catch (error) {
+                console.error('Failed to load reports:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+        loadData();
+    }, []);
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good Morning";
+        if (hour < 18) return "Good Afternoon";
+        return "Good Evening";
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50">
-            {/* Hero Section */}
-            <section className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-teal-600/10"></div>
-                <div className="relative max-w-7xl mx-auto px-6 py-20 md:py-32">
-                    <div className="text-center max-w-4xl mx-auto">
-                        <div className="inline-flex items-center gap-2 bg-blue-100/80 text-blue-700 px-4 py-2 rounded-full text-sm font-medium mb-6 backdrop-blur-sm">
-                            <Brain className="w-4 h-4" />
-                            AI-Powered Medical Diagnostics
-                        </div>
-                        <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
-                            Advanced <span className="bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">Retinal Disease</span> Detection
+        <div className="space-y-8">
+            {/* Welcome Header */}
+            <div className="bg-white rounded-2xl border border-gray-200/60 p-8 trust-shadow">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+                    <div className="flex-1">
+                        <h1 className="text-4xl font-bold text-gray-900 mb-3">
+                            {getGreeting()}{user ? `, Dr. ${user.full_name.split(' ')[0]}` : ''}!
                         </h1>
-                        <p className="text-xl text-slate-600 mb-10 leading-relaxed max-w-3xl mx-auto">
-                            Revolutionizing eye care with cutting-edge AI technology. Detect AME, DME, and macular disorders 
-                            instantly using fundus camera images with clinical-grade accuracy.
+                        <p className="text-xl text-gray-600 mb-6">
+                            Welcome to MINDHUE - Your trusted AI-powered medical diagnosis platform
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link to={createPageUrl("Diagnosis")}>
-                                <Button className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
-                                    <Upload className="w-5 h-5 mr-2" />
-                                    Start Diagnosis
-                                </Button>
-                            </Link>
-                            <Link to={createPageUrl("About")}>
-                                <Button variant="outline" className="border-2 border-slate-300 hover:border-blue-300 px-8 py-3 text-lg font-semibold">
-                                    Learn More
-                                    <ArrowRight className="w-5 h-5 ml-2" />
-                                </Button>
-                            </Link>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Features Section */}
-            <section className="py-20 bg-white/50 backdrop-blur-sm">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                            Why Choose RetinAI?
-                        </h2>
-                        <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-                            Our advanced AI platform combines medical expertise with cutting-edge technology
-                        </p>
-                    </div>
-                    
-                    <div className="grid md:grid-cols-3 gap-8">
-                        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                    <Brain className="w-6 h-6 text-white" />
-                                </div>
-                                <CardTitle className="text-xl font-bold text-slate-900">AI-Powered Analysis</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-slate-600 leading-relaxed">
-                                    Advanced machine learning algorithms trained on thousands of fundus images 
-                                    for precise diagnosis of retinal conditions.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <div className="w-12 h-12 bg-gradient-to-r from-teal-500 to-teal-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                    <Zap className="w-6 h-6 text-white" />
-                                </div>
-                                <CardTitle className="text-xl font-bold text-slate-900">Instant Results</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-slate-600 leading-relaxed">
-                                    Get comprehensive diagnostic reports in seconds, not days. 
-                                    Immediate analysis of AME, DME, and macular disorders.
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg bg-white/80 backdrop-blur-sm">
-                            <CardHeader>
-                                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                                    <Shield className="w-6 h-6 text-white" />
-                                </div>
-                                <CardTitle className="text-xl font-bold text-slate-900">Clinical Grade</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-slate-600 leading-relaxed">
-                                    HIPAA-compliant platform with medical-grade security. 
-                                    Trusted by healthcare professionals worldwide.
-                                </p>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </section>
-
-            {/* How It Works */}
-            <section className="py-20">
-                <div className="max-w-7xl mx-auto px-6">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-                            Simple 3-Step Process
-                        </h2>
-                        <p className="text-xl text-slate-600">
-                            From upload to diagnosis in minutes
-                        </p>
-                    </div>
-
-                    <div className="grid md:grid-cols-3 gap-8 relative">
-                        {/* Connection lines for desktop */}
-                        <div className="hidden md:block absolute top-24 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-blue-200 to-teal-200"></div>
-
-                        <div className="text-center group">
-                            <div className="relative">
-                                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                    <Upload className="w-8 h-8 text-white" />
-                                </div>
-                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+                        <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500">
+                            <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-full">
+                                <Shield className="w-4 h-4 text-green-600" />
+                                <span className="font-medium text-green-700">HIPAA Compliant</span>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-3">Upload Image</h3>
-                            <p className="text-slate-600">
-                                Upload your fundus camera image securely to our platform
-                            </p>
-                        </div>
-
-                        <div className="text-center group">
-                            <div className="relative">
-                                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                    <Eye className="w-8 h-8 text-white" />
-                                </div>
-                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-teal-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+                            <div className="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-full">
+                                <Zap className="w-4 h-4 text-blue-600" />
+                                <span className="font-medium text-blue-700">AI-Powered Analysis</span>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-3">AI Analysis</h3>
-                            <p className="text-slate-600">
-                                Our AI analyzes the image for signs of retinal disorders
-                            </p>
-                        </div>
-
-                        <div className="text-center group">
-                            <div className="relative">
-                                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                    <FileText className="w-8 h-8 text-white" />
-                                </div>
-                                <div className="absolute -top-2 -right-2 w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+                            <div className="flex items-center gap-2 bg-purple-50 px-3 py-2 rounded-full">
+                                <Users className="w-4 h-4 text-purple-600" />
+                                <span className="font-medium text-purple-700">Trusted by 500+ Doctors</span>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-3">Get Results</h3>
-                            <p className="text-slate-600">
-                                Receive detailed diagnostic report and recommendations
-                            </p>
                         </div>
                     </div>
-                </div>
-            </section>
-
-            {/* CTA Section */}
-            <section className="py-20 bg-gradient-to-r from-blue-600 to-teal-600 text-white relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/10"></div>
-                <div className="relative max-w-4xl mx-auto px-6 text-center">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                        Ready to Transform Eye Care?
-                    </h2>
-                    <p className="text-xl mb-8 text-blue-100">
-                        Join thousands of healthcare professionals using RetinAI for accurate retinal diagnosis
-                    </p>
                     <Link to={createPageUrl("Diagnosis")}>
-                        <Button className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200">
-                            Start Free Diagnosis
-                            <ArrowRight className="w-5 h-5 ml-2" />
+                        <Button size="lg" className="medical-gradient hover:opacity-90 text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl px-8 py-4">
+                            <Upload className="w-6 h-6 mr-3" />
+                            Start New Analysis
                         </Button>
                     </Link>
                 </div>
-            </section>
+            </div>
+
+            {/* Stats Overview */}
+            {!loading && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <StatCard 
+                        title="Total Analyses" 
+                        value={stats.reports} 
+                        icon={FileText} 
+                        color="medical-gradient" 
+                        trend={12}
+                    />
+                    <StatCard 
+                        title="Unique Patients" 
+                        value={stats.patients} 
+                        icon={Users} 
+                        color="bg-green-500" 
+                        trend={8}
+                    />
+                    <StatCard 
+                        title="Critical Cases" 
+                        value={stats.critical} 
+                        icon={Activity} 
+                        color="bg-red-500" 
+                    />
+                </div>
+            )}
+
+            {/* Quick Actions */}
+            <div>
+                <div className="mb-8">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-3">Diagnostic Tools</h2>
+                    <p className="text-lg text-gray-600">Choose your analysis type to get started with AI-powered diagnosis</p>
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <ServiceCard
+                        title="Fundus Image Analysis"
+                        description="Upload high-resolution fundus images for AI-powered detection of retinal diseases, macular disorders, and diabetic retinopathy with 95%+ accuracy."
+                        icon={Eye}
+                        color="medical-gradient"
+                        link={createPageUrl("Diagnosis?type=fundus")}
+                        badge="Most Popular"
+                    />
+                    <ServiceCard
+                        title="ERG Report Analysis"
+                        description="Analyze electroretinography reports to evaluate retinal function and detect electrical response abnormalities with advanced AI algorithms."
+                        icon={Activity}
+                        color="bg-green-500"
+                        link={createPageUrl("Diagnosis?type=erg")}
+                        badge="Advanced"
+                    />
+                </div>
+            </div>
+
+            {/* Recent Activity */}
+            {!loading && recentReports.length > 0 && (
+                <Card className="border border-gray-200/60 trust-shadow bg-white">
+                    <CardHeader className="border-b border-gray-100 pb-4">
+                        <CardTitle className="text-2xl font-bold text-gray-900">Recent Analyses</CardTitle>
+                        <p className="text-gray-600">Your latest diagnostic reports and analyses</p>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <div className="space-y-4">
+                            {recentReports.map(report => (
+                                <div key={report.id} className="flex items-center justify-between p-4 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-12 h-12 flex items-center justify-center rounded-2xl shadow-md ${
+                                            (report.analysis_type || 'fundus') === 'fundus' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                                        }`}>
+                                            {(report.analysis_type || 'fundus') === 'fundus' ? <Eye className="w-6 h-6" /> : <Activity className="w-6 h-6" />}
+                                        </div>
+                                        <div>
+                                            <p className="font-semibold text-gray-800 text-lg">
+                                                Report #{report.id ? report.id.slice(-6) : 'N/A'}
+                                            </p>
+                                            <p className="text-sm text-gray-500">
+                                                {(report.analysis_type || 'fundus') ? 
+                                                    ((report.analysis_type || 'fundus').charAt(0).toUpperCase() + (report.analysis_type || 'fundus').slice(1)) : 'General'
+                                                } Analysis • <span className="capitalize font-medium">{report.severity || 'Unknown'}</span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                            <Calendar className="w-4 h-4" />
+                                            {new Date(report.created_date).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {new Date(report.created_date).toLocaleTimeString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
+            {/* Additional Features */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="border border-gray-200/60 trust-shadow bg-white">
+                    <CardHeader className="border-b border-gray-100 pb-4">
+                        <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                            <Brain className="w-6 h-6 text-blue-600" />
+                            AI Assistant
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <p className="text-gray-600 mb-6 leading-relaxed">
+                            Get instant medical insights and answers to your diagnostic questions with our advanced AI assistant powered by the latest medical knowledge.
+                        </p>
+                        <Link to={createPageUrl("Chat")}>
+                            <Button className="w-full medical-gradient hover:opacity-90 text-white rounded-xl py-3 font-semibold">
+                                Start Chat <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-gray-200/60 trust-shadow bg-white">
+                    <CardHeader className="border-b border-gray-100 pb-4">
+                        <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
+                            <Stethoscope className="w-6 h-6 text-green-600" />
+                            Specialist Network
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                        <p className="text-gray-600 mb-6 leading-relaxed">
+                            Connect with qualified ophthalmologists and retinal specialists for comprehensive patient care and professional consultations.
+                        </p>
+                        <Link to={createPageUrl("Doctors")}>
+                            <Button className="w-full bg-green-500 hover:bg-green-600 text-white rounded-xl py-3 font-semibold">
+                                Find Specialists <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

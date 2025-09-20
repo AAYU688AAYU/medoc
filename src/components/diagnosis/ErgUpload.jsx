@@ -2,9 +2,9 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Camera, FileImage, AlertTriangle } from "lucide-react";
+import { Upload, Activity, FileText, AlertTriangle } from "lucide-react";
 
-export default function ImageUpload({ onImageUpload }) {
+export default function ErgUpload({ onFileUpload }) {
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef(null);
 
@@ -25,28 +25,25 @@ export default function ImageUpload({ onImageUpload }) {
         
         const files = e.dataTransfer.files;
         if (files && files[0]) {
-            const file = files[0];
-            if (file.type.startsWith("image/")) {
-                onImageUpload(file);
-            }
+            onFileUpload(files[0]);
         }
     };
 
     const handleFileSelect = (e) => {
         const files = e.target.files;
         if (files && files[0]) {
-            onImageUpload(files[0]);
+            onFileUpload(files[0]);
         }
     };
 
     return (
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+        <Card className="shadow-lg border-slate-200/60">
             <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Camera className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Activity className="w-8 h-8 text-white" />
                 </div>
-                <CardTitle className="text-2xl font-bold text-slate-900">Upload Fundus Image</CardTitle>
-                <p className="text-slate-600">Upload a high-quality retinal image for AI analysis</p>
+                <CardTitle className="text-2xl font-bold text-slate-900">Upload ERG Report</CardTitle>
+                <p className="text-slate-600">Upload an ERG data file for AI analysis</p>
             </CardHeader>
             <CardContent>
                 <div
@@ -63,19 +60,19 @@ export default function ImageUpload({ onImageUpload }) {
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept="image/*"
+                        accept=".csv, .txt, .json"
                         onChange={handleFileSelect}
                         className="hidden"
                     />
                     
                     <div className="space-y-4">
                         <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-                            <FileImage className="w-8 h-8 text-slate-400" />
+                            <FileText className="w-8 h-8 text-slate-400" />
                         </div>
                         
                         <div>
                             <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                                Drop your fundus image here
+                                Drop your ERG report file here
                             </h3>
                             <p className="text-slate-600 mb-4">
                                 Or click to select from your device
@@ -84,14 +81,14 @@ export default function ImageUpload({ onImageUpload }) {
                         
                         <Button 
                             onClick={() => fileInputRef.current?.click()}
-                            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white"
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
                         >
                             <Upload className="w-5 h-5 mr-2" />
-                            Select Image File
+                            Select Report File
                         </Button>
                         
                         <p className="text-sm text-slate-500">
-                            Supported formats: JPG, PNG, TIFF • Max size: 10MB
+                            Supported formats: CSV, TXT, JSON
                         </p>
                     </div>
                 </div>
@@ -100,12 +97,11 @@ export default function ImageUpload({ onImageUpload }) {
                     <div className="flex items-start gap-3">
                         <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5" />
                         <div>
-                            <h4 className="font-semibold text-blue-800 mb-1">Image Quality Guidelines</h4>
-                            <ul className="text-sm text-blue-700 space-y-1">
-                                <li>• Use high-resolution fundus camera images</li>
-                                <li>• Ensure proper illumination and focus</li>
-                                <li>• Center the image on the macula region</li>
-                                <li>• Avoid blurry or overexposed images</li>
+                            <h4 className="font-semibold text-blue-800 mb-1">Data Guidelines</h4>
+                            <ul className="text-sm text-blue-700 list-disc list-inside space-y-1">
+                                <li>Ensure data is well-structured (e.g., proper columns in CSV).</li>
+                                <li>Include headers for clarity if possible.</li>
+                                <li>The file should contain waveform data (amplitude, time).</li>
                             </ul>
                         </div>
                     </div>

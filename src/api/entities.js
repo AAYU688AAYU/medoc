@@ -7,6 +7,8 @@ export const DiagnosisReport = base44.entities.DiagnosisReport;
 
 export const Doctor = base44.entities.Doctor;
 
+export const DiseaseInfo = base44.entities.DiseaseInfo;
+
 
 
 // auth sdk:

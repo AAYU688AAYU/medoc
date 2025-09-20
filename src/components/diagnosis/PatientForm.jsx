@@ -27,9 +27,9 @@ export default function PatientForm({ onSubmit }) {
     };
 
     return (
-        <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+        <Card className="trust-shadow border-gray-200/80 bg-white">
             <CardHeader className="text-center pb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 medical-gradient rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <User className="w-8 h-8 text-white" />
                 </div>
                 <CardTitle className="text-2xl font-bold text-slate-900">Patient Information</CardTitle>
@@ -39,7 +39,7 @@ export default function PatientForm({ onSubmit }) {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="full_name" className="text-sm font-semibold text-slate-700">
+                            <Label htmlFor="full_name" className="text-sm font-medium text-slate-700">
                                 Full Name *
                             </Label>
                             <Input
@@ -48,12 +48,12 @@ export default function PatientForm({ onSubmit }) {
                                 onChange={(e) => handleChange("full_name", e.target.value)}
                                 placeholder="Enter patient's full name"
                                 required
-                                className="border-slate-200 focus:border-blue-500"
+                                className="border-gray-200"
                             />
                         </div>
                         
                         <div className="space-y-2">
-                            <Label htmlFor="age" className="text-sm font-semibold text-slate-700">
+                            <Label htmlFor="age" className="text-sm font-medium text-slate-700">
                                 Age *
                             </Label>
                             <Input
@@ -65,18 +65,18 @@ export default function PatientForm({ onSubmit }) {
                                 required
                                 min="1"
                                 max="120"
-                                className="border-slate-200 focus:border-blue-500"
+                                className="border-gray-200"
                             />
                         </div>
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label htmlFor="gender" className="text-sm font-semibold text-slate-700">
+                            <Label htmlFor="gender" className="text-sm font-medium text-slate-700">
                                 Gender
                             </Label>
                             <Select onValueChange={(value) => handleChange("gender", value)}>
-                                <SelectTrigger className="border-slate-200 focus:border-blue-500">
+                                <SelectTrigger className="border-gray-200">
                                     <SelectValue placeholder="Select gender" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -88,7 +88,7 @@ export default function PatientForm({ onSubmit }) {
                         </div>
                         
                         <div className="space-y-2">
-                            <Label htmlFor="phone" className="text-sm font-semibold text-slate-700">
+                            <Label htmlFor="phone" className="text-sm font-medium text-slate-700">
                                 Phone Number
                             </Label>
                             <Input
@@ -96,13 +96,13 @@ export default function PatientForm({ onSubmit }) {
                                 value={formData.phone}
                                 onChange={(e) => handleChange("phone", e.target.value)}
                                 placeholder="Phone number"
-                                className="border-slate-200 focus:border-blue-500"
+                                className="border-gray-200"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="medical_history" className="text-sm font-semibold text-slate-700">
+                        <Label htmlFor="medical_history" className="text-sm font-medium text-slate-700">
                             Medical History
                         </Label>
                         <Textarea
@@ -111,12 +111,12 @@ export default function PatientForm({ onSubmit }) {
                             onChange={(e) => handleChange("medical_history", e.target.value)}
                             placeholder="Previous conditions, medications, surgeries..."
                             rows={3}
-                            className="border-slate-200 focus:border-blue-500 resize-none"
+                            className="border-gray-200 resize-none"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="symptoms" className="text-sm font-semibold text-slate-700">
+                        <Label htmlFor="symptoms" className="text-sm font-medium text-slate-700">
                             Current Symptoms
                         </Label>
                         <Textarea
@@ -125,13 +125,13 @@ export default function PatientForm({ onSubmit }) {
                             onChange={(e) => handleChange("symptoms", e.target.value)}
                             placeholder="Describe any vision problems, pain, or other symptoms..."
                             rows={3}
-                            className="border-slate-200 focus:border-blue-500 resize-none"
+                            className="border-gray-200 resize-none"
                         />
                     </div>
 
                     <Button 
                         type="submit" 
-                        className="w-full bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white py-3 text-lg font-semibold shadow-lg"
+                        className="w-full medical-gradient hover:opacity-90 text-white py-3 text-base font-semibold shadow-lg"
                     >
                         Continue to Image Upload
                     </Button>
