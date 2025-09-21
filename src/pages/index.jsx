@@ -12,6 +12,8 @@ import Doctors from "./Doctors";
 
 import Chat from "./Chat";
 
+import AdminDashboard from "./AdminDashboard";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -27,6 +29,8 @@ const PAGES = {
     Doctors: Doctors,
     
     Chat: Chat,
+    
+    AdminDashboard: AdminDashboard,
     
 }
 
@@ -66,6 +70,8 @@ function PagesContent() {
                 <Route path="/Doctors" element={<Doctors />} />
                 
                 <Route path="/Chat" element={<Chat />} />
+                
+                <Route path="/AdminDashboard" element={<AdminDashboard />} />
                 
             </Routes>
         </Layout>

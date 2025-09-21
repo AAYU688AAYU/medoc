@@ -1,100 +1,88 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Bot, User as UserIcon, Loader2, Brain, Sparkles, MessageSquare } from "lucide-react";
+import { Send, Bot, User as UserIcon, Loader2, Brain, Sparkles, MessageSquare, ChevronRight } from "lucide-react";
 import { InvokeLLM } from "@/api/integrations";
 import ReactMarkdown from 'react-markdown';
 import { User } from "@/api/entities";
 
-const AIMessage = ({ text }) => (
+const AIMessage = ({ text, isStreaming }) => (
     <div className="flex items-start gap-4 mb-6">
-        <Avatar className="w-10 h-10 border-2 border-blue-200 shadow-sm">
-            <AvatarFallback className="bg-blue-600 text-white">
+        <Avatar className="w-10 h-10 border-2 border-blue-200 shadow-sm flex-shrink-0">
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
                 <Brain className="w-5 h-5" />
             </AvatarFallback>
         </Avatar>
-        <div className="bg-white rounded-2xl rounded-tl-md p-4 max-w-3xl shadow-sm border border-slate-200">
-            <div className="flex items-center gap-2 mb-2">
+        <div className="bg-white rounded-2xl rounded-tl-none p-4 w-full shadow-sm border border-slate-200/80">
+            <div className="flex items-center gap-2 mb-2 border-b border-slate-100 pb-2">
                 <Sparkles className="w-4 h-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-600">MINDHUE AI</span>
+                <span className="text-sm font-semibold text-blue-700">MINDHUE AI</span>
             </div>
-            <ReactMarkdown className="prose prose-sm max-w-none text-slate-700">{text}</ReactMarkdown>
+            {isStreaming ? (
+                 <div className="flex items-center gap-3 py-2">
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                    <span className="text-sm text-slate-600">Analyzing your question...</span>
+                </div>
+            ) : (
+                <ReactMarkdown className="prose prose-sm max-w-none text-slate-800">{text}</ReactMarkdown>
+            )}
         </div>
     </div>
 );
 
-const UserMessage = ({ text }) => (
+const UserMessage = ({ text, userName }) => (
     <div className="flex items-start gap-4 justify-end mb-6">
-        <div className="bg-blue-600 text-white rounded-2xl rounded-tr-md p-4 max-w-2xl shadow-sm">
+        <div className="bg-blue-700 text-white rounded-2xl rounded-tr-none p-4 max-w-2xl shadow-md">
             <p className="text-sm leading-relaxed">{text}</p>
         </div>
-        <Avatar className="w-10 h-10 border-2 border-slate-200 shadow-sm">
-             <AvatarFallback className="bg-slate-600 text-white">
-                <UserIcon className="w-5 h-5" />
+        <Avatar className="w-10 h-10 border-2 border-slate-200 shadow-sm flex-shrink-0">
+             <AvatarFallback className="bg-slate-700 text-white font-semibold">
+                {userName ? userName.charAt(0) : <UserIcon className="w-5 h-5" />}
             </AvatarFallback>
         </Avatar>
     </div>
 );
 
-const SuggestedQuestions = ({ onSelectQuestion }) => {
-    const suggestions = [
-        "What are the signs of diabetic retinopathy?",
-        "How do I interpret ERG results?",
-        "When should I refer a patient to a specialist?",
-        "What's the difference between AMD and diabetic macular edema?",
-        "How accurate is AI in fundus image analysis?",
-        "What are the best practices for fundus photography?"
-    ];
+const SuggestedQuestionCard = ({ question, onSelect }) => (
+    <button
+        onClick={() => onSelect(question)}
+        className="w-full text-left p-4 bg-white rounded-xl shadow-sm border border-slate-200/80 hover:bg-slate-50 hover:border-blue-300 transition-all duration-200 group flex items-center justify-between"
+    >
+        <span className="text-sm font-medium text-slate-700 group-hover:text-blue-700">{question}</span>
+        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition-transform duration-200 group-hover:translate-x-1" />
+    </button>
+);
 
-    return (
-        <div className="mb-6">
-            <h3 className="text-sm font-medium text-slate-600 mb-3">Suggested Questions:</h3>
-            <div className="flex flex-wrap gap-2">
-                {suggestions.map((question, index) => (
-                    <Button
-                        key={index}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onSelectQuestion(question)}
-                        className="text-xs border-slate-300 hover:border-blue-400 hover:text-blue-600 transition-colors"
-                    >
-                        {question}
-                    </Button>
-                ))}
-            </div>
-        </div>
-    );
-};
 
 export default function Chat() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [user, setUser] = useState(null);
-    const messagesEndRef = React.useRef(null);
+    const messagesEndRef = useRef(null);
+
+    const initialSuggestions = [
+        "What are the signs of diabetic retinopathy?",
+        "How do I interpret ERG results?",
+        "When should I refer a patient to a specialist?",
+        "What's the difference between AMD and diabetic macular edema?",
+    ];
 
     useEffect(() => {
         User.me().then(setUser).catch(() => setUser(null));
         setMessages([
             { 
                 sender: 'ai', 
-                text: `Hello! I'm your MINDHUE AI medical assistant, specialized in ophthalmology and retinal diseases. I can help you with:
-
-• **Diagnostic Insights** - Explain fundus image findings and ERG results
-• **Clinical Guidance** - Treatment recommendations and referral decisions  
-• **Medical Education** - Latest research and best practices
-• **Platform Support** - How to use MINDHUE features effectively
-
-What would you like to know today?` 
+                text: `Hello! I'm your MINDHUE AI medical assistant, specialized in ophthalmology and retinal diseases. How can I assist you today?` 
             }
         ]);
     }, []);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
+    }, [messages, isLoading]);
 
     const handleSend = async (question = null) => {
         const messageText = question || input.trim();
@@ -106,40 +94,14 @@ What would you like to know today?`
         setIsLoading(true);
 
         try {
-            const prompt = `
-                You are MINDHUE AI, a specialized medical AI assistant focused on ophthalmology and retinal diseases.
-                
-                Your expertise includes:
-                - Fundus image analysis and interpretation
-                - ERG (Electroretinography) results analysis
-                - Retinal diseases (AMD, diabetic retinopathy, macular edema, etc.)
-                - Treatment protocols and clinical guidelines
-                - When to refer patients to specialists
-                - Latest research in ophthalmology
-                
-                User context: ${user ? `Medical professional - ${user.full_name} (${user.email})` : 'Healthcare professional (not logged in)'}
-                
-                User question: "${messageText}"
-                
-                Provide a comprehensive, medically accurate response that:
-                1. Is professional and clinically relevant
-                2. Uses appropriate medical terminology
-                3. Includes specific recommendations when applicable
-                4. Mentions when specialist consultation is needed
-                5. Cites evidence-based practices when relevant
-                
-                Format your response in markdown for better readability.
-            `;
-
+            const prompt = `You are MINDHUE AI, a specialized medical AI assistant focused on ophthalmology and retinal diseases. User context: ${user ? `Medical professional - ${user.full_name} (${user.email})` : 'Healthcare professional (not logged in)'}. User question: "${messageText}". Provide a comprehensive, medically accurate response formatted in markdown.`;
             const response = await InvokeLLM({ prompt });
-            
-            setMessages([...newMessages, { sender: 'ai', text: response }]);
+            setMessages(prev => [...prev, { sender: 'ai', text: response }]);
         } catch (error) {
-            setMessages([...newMessages, { 
+            setMessages(prev => [...prev, { 
                 sender: 'ai', 
-                text: 'I apologize, but I encountered a technical issue. Please try again, or contact our support team if the problem persists. Your question is important to me!' 
+                text: 'I apologize, but I encountered a technical issue. Please try again or contact our support team if the problem persists.' 
             }]);
-            console.error('AI Chat error:', error);
         } finally {
             setIsLoading(false);
         }
@@ -153,78 +115,62 @@ What would you like to know today?`
     };
 
     return (
-        <div className="max-w-4xl mx-auto">
-            <Card className="shadow-lg border-0 bg-white min-h-[600px] flex flex-col">
-                <CardHeader className="bg-blue-50 border-b border-blue-100">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+        <div className="h-[calc(100vh-100px)] flex flex-col max-w-4xl mx-auto">
+            <Card className="flex-1 flex flex-col shadow-xl border-gray-200/80 rounded-2xl bg-slate-50/70 overflow-hidden">
+                <CardHeader className="bg-white/80 backdrop-blur-sm border-b border-slate-200/80">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 medical-gradient rounded-xl flex items-center justify-center shadow-lg">
                             <Brain className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <CardTitle className="text-xl font-bold text-slate-900">
-                                MINDHUE AI Medical Assistant
+                            <CardTitle className="text-lg font-bold text-slate-900">
+                                MINDHUE AI Assistant
                             </CardTitle>
-                            <p className="text-sm text-slate-600 mt-1">
-                                Specialized in Ophthalmology & Retinal Disease Analysis
+                            <p className="text-sm text-slate-600">
+                                Specialized in Ophthalmology & Retinal Analysis
                             </p>
-                        </div>
-                        <div className="ml-auto">
-                            <div className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                Online
-                            </div>
                         </div>
                     </div>
                 </CardHeader>
 
-                <CardContent className="flex-1 p-6 overflow-y-auto bg-slate-50">
-                    {messages.length <= 1 && (
-                        <SuggestedQuestions onSelectQuestion={handleSend} />
+                <CardContent className="flex-1 p-6 overflow-y-auto space-y-4">
+                     {messages.length <= 1 && !isLoading && (
+                        <div className="space-y-3">
+                            <h3 className="text-sm font-semibold text-slate-700 mb-2">Suggested Questions:</h3>
+                            {initialSuggestions.map((q, i) => (
+                                <SuggestedQuestionCard key={i} question={q} onSelect={handleSend} />
+                            ))}
+                        </div>
                     )}
                     
-                    <div className="space-y-1">
-                        {messages.map((msg, index) => 
-                            msg.sender === 'ai' 
-                                ? <AIMessage key={index} text={msg.text} /> 
-                                : <UserMessage key={index} text={msg.text} />
-                        )}
-                        
-                        {isLoading && (
-                            <div className="flex items-start gap-4 mb-6">
-                                <Avatar className="w-10 h-10 border-2 border-blue-200 shadow-sm">
-                                    <AvatarFallback className="bg-blue-600 text-white">
-                                        <Brain className="w-5 h-5" />
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="bg-white rounded-2xl rounded-tl-md p-4 shadow-sm border border-slate-200">
-                                    <div className="flex items-center gap-3">
-                                        <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-                                        <span className="text-sm text-slate-600">Analyzing your question...</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        <div ref={messagesEndRef} />
-                    </div>
+                    {messages.map((msg, index) => 
+                        msg.sender === 'ai' 
+                            ? <AIMessage key={index} text={msg.text} /> 
+                            : <UserMessage key={index} text={msg.text} userName={user?.full_name} />
+                    )}
+                    
+                    {isLoading && <AIMessage isStreaming={true} />}
+                    <div ref={messagesEndRef} />
                 </CardContent>
 
-                <div className="p-6 border-t bg-white">
-                    <div className="flex gap-3">
+                <div className="p-4 bg-white/80 backdrop-blur-sm border-t border-slate-200/80">
+                    <div className="flex gap-3 items-center">
                         <div className="flex-1 relative">
                             <Input 
-                                placeholder="Ask about diagnosis, treatment protocols, or clinical guidelines..."
+                                placeholder="Ask a question about a diagnosis or treatment..."
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyPress={handleKeyPress}
                                 disabled={isLoading}
-                                className="pr-12 h-12 border-slate-300 focus:border-blue-500 rounded-xl"
+                                className="pr-12 h-12 border-slate-300 focus:border-blue-500 focus:ring-blue-500/20 focus:ring-2 rounded-xl text-slate-900"
                             />
-                            <MessageSquare className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <MessageSquare className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                         </div>
                         <Button 
                             onClick={() => handleSend()}
                             disabled={isLoading || !input.trim()}
-                            className="h-12 px-6 bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm"
+                            className="h-12 w-12 flex-shrink-0 bg-blue-700 hover:bg-blue-800 rounded-xl shadow-sm disabled:bg-slate-300"
+                            size="icon"
                         >
                             {isLoading ? (
                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -232,11 +178,6 @@ What would you like to know today?`
                                 <Send className="w-5 h-5" />
                             )}
                         </Button>
-                    </div>
-                    
-                    <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
-                        <span>Powered by advanced medical AI • Always consult qualified healthcare professionals</span>
-                        <span>{user ? `Logged in as ${user.full_name}` : 'Guest session'}</span>
                     </div>
                 </div>
             </Card>

@@ -17,23 +17,83 @@ import {
     BarChart3,
     TrendingUp,
     Clock,
-    AlertTriangle
+    AlertTriangle,
+    Plus
 } from "lucide-react";
 import { DiagnosisReport } from "@/api/entities";
 import { Patient } from "@/api/entities";
 import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const getSeverityColor = (severity) => {
     switch (severity) {
-        case "mild": return "bg-cyan-100 text-cyan-800";
-        case "moderate": return "bg-blue-100 text-blue-800";
-        case "severe": return "bg-indigo-100 text-indigo-800";
-        case "critical": return "bg-red-100 text-red-800";
-        default: return "bg-slate-100 text-slate-800";
+        case "mild": return "bg-cyan-100 text-cyan-800 border-cyan-200";
+        case "moderate": return "bg-blue-100 text-blue-800 border-blue-200";
+        case "severe": return "bg-indigo-100 text-indigo-800 border-indigo-200";
+        case "critical": return "bg-red-100 text-red-800 border-red-200";
+        default: return "bg-slate-100 text-slate-800 border-slate-200";
     }
 };
+
+const StatCard = ({ title, value, icon: Icon, gradient, delay }) => (
+    <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay }}
+    >
+        <Card className={`${gradient} text-white shadow-lg border-0`}>
+            <CardContent className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="text-white/90 text-sm font-medium mb-1">{title}</p>
+                        <p className="text-2xl md:text-3xl font-bold">{value}</p>
+                    </div>
+                    <div className="p-2 bg-white/20 rounded-full">
+                        <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    </motion.div>
+);
+
+const ReportCardSkeleton = () => (
+    <Card className="shadow-md border-0 bg-white/90 backdrop-blur-sm overflow-hidden">
+        <CardContent className="p-4 md:p-6">
+            <div className="animate-pulse">
+                <div className="flex items-start justify-between">
+                    <div className="flex-1 space-y-4">
+                        <div className="flex items-center gap-3">
+                            <div className="h-6 bg-slate-200 rounded w-1/4"></div>
+                            <div className="h-6 bg-slate-200 rounded w-16"></div>
+                            <div className="h-6 bg-slate-200 rounded w-24"></div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                            <div className="h-4 bg-slate-200 rounded w-32"></div>
+                            <div className="h-4 bg-slate-200 rounded w-24"></div>
+                        </div>
+
+                        <div className="h-4 bg-slate-200 rounded w-full"></div>
+                        <div className="h-4 bg-slate-200 rounded w-3/4"></div>
+
+                        <div className="flex flex-wrap gap-2">
+                            <div className="h-6 bg-slate-200 rounded w-16"></div>
+                            <div className="h-6 bg-slate-200 rounded w-20"></div>
+                            <div className="h-6 bg-slate-200 rounded w-14"></div>
+                        </div>
+                    </div>
+
+                    <div className="ml-4 space-y-2">
+                        <div className="h-9 bg-slate-200 rounded w-24"></div>
+                        <div className="h-6 bg-slate-200 rounded w-28"></div>
+                    </div>
+                </div>
+            </div>
+        </CardContent>
+    </Card>
+);
 
 export default function Reports() {
     const [reports, setReports] = useState([]);
@@ -43,6 +103,7 @@ export default function Reports() {
     const [severityFilter, setSeverityFilter] = useState("all");
     const [statusFilter, setStatusFilter] = useState("all");
     const [loading, setLoading] = useState(true);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     const loadData = async () => {
         try {
@@ -107,9 +168,9 @@ export default function Reports() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+            <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4">
                 <div className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-teal-600 rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-lg text-slate-600">Loading diagnostic reports...</p>
                 </div>
             </div>
@@ -117,227 +178,254 @@ export default function Reports() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 p-6">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-teal-50 p-4 md:p-6">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-6">
+                <div className="mb-6 md:mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">
+                            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2">
                                 Diagnostic Reports
                             </h1>
-                            <p className="text-lg text-slate-600">
+                            <p className="text-slate-600">
                                 View and manage all AI-generated retinal analysis reports
                             </p>
                         </div>
-                        <Link to={createPageUrl("Diagnosis")}>
-                            <Button className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white shadow-lg">
-                                <Eye className="w-4 h-4 mr-2" />
+                        <Link to={createPageUrl("Diagnosis")} className="w-full md:w-auto">
+                            <Button className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white shadow-md">
+                                <Plus className="w-4 h-4 mr-2" />
                                 New Analysis
                             </Button>
                         </Link>
                     </div>
 
                     {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-blue-100 text-sm">Total Reports</p>
-                                        <p className="text-2xl font-bold">{reports.length}</p>
-                                    </div>
-                                    <FileText className="w-8 h-8 text-blue-200" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-r from-green-500 to-cyan-600 text-white shadow-lg">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-cyan-100 text-sm">Normal/Mild</p>
-                                        <p className="text-2xl font-bold">
-                                            {reports.filter(r => r.severity === 'mild').length}
-                                        </p>
-                                    </div>
-                                    <TrendingUp className="w-8 h-8 text-cyan-200" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-blue-100 text-sm">Moderate/Severe</p>
-                                        <p className="text-2xl font-bold">
-                                            {reports.filter(r => ['moderate', 'severe'].includes(r.severity)).length}
-                                        </p>
-                                    </div>
-                                    <AlertTriangle className="w-8 h-8 text-blue-200" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg">
-                            <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-purple-100 text-sm">Unique Patients</p>
-                                        <p className="text-2xl font-bold">{patients.length}</p>
-                                    </div>
-                                    <User className="w-8 h-8 text-purple-200" />
-                                </div>
-                            </CardContent>
-                        </Card>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+                        <StatCard 
+                            title="Total Reports" 
+                            value={reports.length} 
+                            icon={FileText} 
+                            gradient="bg-gradient-to-r from-blue-500 to-blue-600"
+                            delay={0.1}
+                        />
+                        <StatCard 
+                            title="Normal/Mild" 
+                            value={reports.filter(r => r.severity === 'mild').length} 
+                            icon={TrendingUp} 
+                            gradient="bg-gradient-to-r from-green-500 to-cyan-600"
+                            delay={0.2}
+                        />
+                        <StatCard 
+                            title="Moderate/Severe" 
+                            value={reports.filter(r => ['moderate', 'severe'].includes(r.severity)).length} 
+                            icon={AlertTriangle} 
+                            gradient="bg-gradient-to-r from-amber-500 to-orange-600"
+                            delay={0.3}
+                        />
+                        <StatCard 
+                            title="Unique Patients" 
+                            value={patients.length} 
+                            icon={User} 
+                            gradient="bg-gradient-to-r from-purple-500 to-purple-600"
+                            delay={0.4}
+                        />
                     </div>
                 </div>
 
                 {/* Filters */}
-                <Card className="mb-6 shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                    <CardContent className="p-6">
-                        <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
-                                    <Input
-                                        placeholder="Search by patient name or diagnosis..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-10 border-slate-200 focus:border-blue-500"
-                                    />
+                <Card className="mb-6 shadow-md border-0 bg-white/80 backdrop-blur-sm">
+                    <CardContent className="p-4 md:p-6">
+                        <div className="flex flex-col gap-4">
+                            <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+                                        <Input
+                                            placeholder="Search by patient name or diagnosis..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
+                                            className="pl-10 border-slate-200 focus:border-blue-500 text-slate-900"
+                                        />
+                                    </div>
                                 </div>
+                                
+                                <Button 
+                                    variant="outline" 
+                                    className="sm:hidden text-slate-700"
+                                    onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                >
+                                    <Filter className="w-4 h-4 mr-2" />
+                                    Filters
+                                </Button>
                             </div>
                             
-                            <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                                <SelectTrigger className="w-48">
-                                    <Filter className="w-4 h-4 mr-2" />
-                                    <SelectValue placeholder="Filter by severity" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Severities</SelectItem>
-                                    <SelectItem value="mild">Mild</SelectItem>
-                                    <SelectItem value="moderate">Moderate</SelectItem>
-                                    <SelectItem value="severe">Severe</SelectItem>
-                                    <SelectItem value="critical">Critical</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 ${isFilterOpen ? 'block' : 'hidden sm:grid'}`}>
+                                <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                                    <SelectTrigger className="text-slate-700">
+                                        <SelectValue placeholder="Filter by severity" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Severities</SelectItem>
+                                        <SelectItem value="mild">Mild</SelectItem>
+                                        <SelectItem value="moderate">Moderate</SelectItem>
+                                        <SelectItem value="severe">Severe</SelectItem>
+                                        <SelectItem value="critical">Critical</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                            <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                <SelectTrigger className="w-48">
-                                    <Filter className="w-4 h-4 mr-2" />
-                                    <SelectValue placeholder="Filter by status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Statuses</SelectItem>
-                                    <SelectItem value="pending">Pending</SelectItem>
-                                    <SelectItem value="reviewed">Reviewed</SelectItem>
-                                    <SelectItem value="completed">Completed</SelectItem>
-                                </SelectContent>
-                            </Select>
+                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                    <SelectTrigger className="text-slate-700">
+                                        <SelectValue placeholder="Filter by status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Statuses</SelectItem>
+                                        <SelectItem value="pending">Pending</SelectItem>
+                                        <SelectItem value="reviewed">Reviewed</SelectItem>
+                                        <SelectItem value="completed">Completed</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                
+                                <div className="flex items-center justify-end lg:justify-start">
+                                    <Button 
+                                        variant="ghost" 
+                                        onClick={() => {
+                                            setSearchTerm("");
+                                            setSeverityFilter("all");
+                                            setStatusFilter("all");
+                                        }}
+                                        className="text-slate-600 hover:text-slate-800"
+                                    >
+                                        Clear Filters
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
+                {/* Results Count */}
+                <div className="mb-4 flex items-center justify-between">
+                    <p className="text-sm text-slate-600">
+                        Showing {filteredReports.length} of {reports.length} reports
+                    </p>
+                    <div className="text-xs text-slate-500">
+                        Sorted by: Most Recent
+                    </div>
+                </div>
+
                 {/* Reports List */}
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                     {filteredReports.length === 0 ? (
-                        <Card className="shadow-lg border-0 text-center py-12">
+                        <Card className="shadow-md border-0 text-center py-8 md:py-12">
                             <CardContent>
-                                <FileText className="w-16 h-16 text-slate-400 mx-auto mb-4" />
-                                <h3 className="text-xl font-semibold text-slate-900 mb-2">No Reports Found</h3>
-                                <p className="text-slate-600 mb-6">
+                                <FileText className="w-12 h-12 md:w-16 md:h-16 text-slate-400 mx-auto mb-4" />
+                                <h3 className="text-lg md:text-xl font-semibold text-slate-900 mb-2">No Reports Found</h3>
+                                <p className="text-slate-600 mb-6 max-w-md mx-auto">
                                     {reports.length === 0 
-                                        ? "No diagnostic reports have been generated yet."
-                                        : "No reports match your current filters."
+                                        ? "No diagnostic reports have been generated yet. Start by creating your first analysis."
+                                        : "No reports match your current filters. Try adjusting your search criteria."
                                     }
                                 </p>
                                 <Link to={createPageUrl("Diagnosis")}>
                                     <Button className="bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white">
-                                        <Eye className="w-4 h-4 mr-2" />
+                                        <Plus className="w-4 h-4 mr-2" />
                                         Start New Analysis
                                     </Button>
                                 </Link>
                             </CardContent>
                         </Card>
                     ) : (
-                        filteredReports.map((report, index) => (
-                            <motion.div
-                                key={report.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3, delay: index * 0.05 }}
-                            >
-                                <Card className="shadow-lg border-0 hover:shadow-xl transition-all duration-200 bg-white/90 backdrop-blur-sm">
-                                    <CardContent className="p-6">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-3">
-                                                    <h3 className="text-lg font-semibold text-slate-900">
-                                                        {getPatientName(report.patient_id)}
-                                                    </h3>
-                                                    <Badge className={getSeverityColor(report.severity)}>
-                                                        {(report.severity || 'N/A').toUpperCase()}
-                                                    </Badge>
-                                                    <Badge variant="outline" className="bg-slate-50">
-                                                        {Math.round(report.confidence_score || 85)}% Confidence
-                                                    </Badge>
-                                                </div>
-                                                
-                                                <div className="flex items-center gap-4 text-sm text-slate-600 mb-3">
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="w-4 h-4" />
-                                                        {formatDate(report.created_date)}
+                        <AnimatePresence>
+                            {filteredReports.map((report, index) => (
+                                <motion.div
+                                    key={report.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3, delay: index * 0.05 }}
+                                    layout
+                                >
+                                    <Card className="shadow-md border-0 hover:shadow-lg transition-all duration-200 bg-white/90 backdrop-blur-sm overflow-hidden">
+                                        <CardContent className="p-4 md:p-6">
+                                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                                <div className="flex-1">
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+                                                        <h3 className="text-base md:text-lg font-semibold text-slate-900 truncate">
+                                                            {getPatientName(report.patient_id)}
+                                                        </h3>
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge 
+                                                                className={`${getSeverityColor(report.severity)} border`}
+                                                            >
+                                                                {(report.severity || 'N/A').toUpperCase()}
+                                                            </Badge>
+                                                            <Badge variant="outline" className="bg-slate-50 text-slate-700">
+                                                                {Math.round(report.confidence_score || 85)}% Confidence
+                                                            </Badge>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="w-4 h-4" />
-                                                        Report ID: {report.id?.slice(-8)}
+                                                    
+                                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-slate-600 mb-3">
+                                                        <div className="flex items-center gap-1">
+                                                            <Calendar className="w-4 h-4" />
+                                                            {formatDate(report.created_date)}
+                                                        </div>
+                                                        <div className="flex items-center gap-1">
+                                                            <Clock className="w-4 h-4" />
+                                                            ID: {report.id?.slice(-8)}
+                                                        </div>
+                                                    </div>
+
+                                                    <p className="text-slate-700 mb-4 line-clamp-2 text-sm md:text-base">
+                                                        {report.diagnosis?.substring(0, 200)}...
+                                                    </p>
+
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {report.detected_conditions?.slice(0, 3).map((condition, i) => (
+                                                            <Badge 
+                                                                key={i} 
+                                                                variant="secondary" 
+                                                                className="bg-blue-50 text-blue-700 text-xs border-blue-200"
+                                                            >
+                                                                {condition}
+                                                            </Badge>
+                                                        ))}
+                                                        {report.detected_conditions?.length > 3 && (
+                                                            <Badge 
+                                                                variant="secondary" 
+                                                                className="bg-slate-100 text-slate-600 text-xs border-slate-200"
+                                                            >
+                                                                +{report.detected_conditions.length - 3} more
+                                                            </Badge>
+                                                        )}
                                                     </div>
                                                 </div>
 
-                                                <p className="text-slate-700 mb-4 line-clamp-2">
-                                                    {report.diagnosis?.substring(0, 200)}...
-                                                </p>
-
-                                                <div className="flex flex-wrap gap-2">
-                                                    {report.detected_conditions?.slice(0, 3).map((condition, i) => (
-                                                        <Badge key={i} variant="secondary" className="bg-blue-50 text-blue-700">
-                                                            {condition}
-                                                        </Badge>
-                                                    ))}
-                                                    {report.detected_conditions?.length > 3 && (
-                                                        <Badge variant="secondary" className="bg-slate-100 text-slate-600">
-                                                            +{report.detected_conditions.length - 3} more
+                                                <div className="flex flex-col gap-2 md:items-end">
+                                                    <Button 
+                                                        size="sm" 
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
+                                                        onClick={() => {
+                                                            // View detailed report functionality
+                                                            console.log("View report:", report.id);
+                                                        }}
+                                                    >
+                                                        <Eye className="w-4 h-4 mr-1" />
+                                                        View Details
+                                                    </Button>
+                                                    
+                                                    {report.doctor_review_required && (
+                                                        <Badge className="bg-blue-100 text-blue-800 text-xs border-blue-200 self-start md:self-auto">
+                                                            Doctor Review Required
                                                         </Badge>
                                                     )}
                                                 </div>
                                             </div>
-
-                                            <div className="flex flex-col gap-2 ml-4">
-                                                <Button 
-                                                    size="sm" 
-                                                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                                                    onClick={() => {
-                                                        // View detailed report functionality
-                                                        console.log("View report:", report.id);
-                                                    }}
-                                                >
-                                                    <ArrowRight className="w-4 h-4 mr-1" />
-                                                    View Details
-                                                </Button>
-                                                
-                                                {report.doctor_review_required && (
-                                                    <Badge className="bg-blue-100 text-blue-800 text-xs">
-                                                        Review Required
-                                                    </Badge>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        ))
+                                        </CardContent>
+                                    </Card>
+                                </motion.div>
+                            ))}
+                        </AnimatePresence>
                     )}
                 </div>
             </div>
